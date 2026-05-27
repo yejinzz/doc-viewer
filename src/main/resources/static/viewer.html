@@ -1,6 +1,36 @@
 <!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>뷰어</title></head>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>문서 뷰어</title>
+  <link rel="stylesheet" href="/docviewer/static/viewer.css">
+  <script>window.DOCVIEWER_CONFIG = __DOCVIEWER_CONFIG__;</script>
+  <script src="/docviewer/static/lib/pdf.min.js"></script>
+</head>
 <body>
-<script>window.DOCVIEWER_CONFIG = __DOCVIEWER_CONFIG__;</script>
-<div id="loading">로딩 중...</div>
-</body></html>
+  <div id="toolbar">
+    <span id="filename"></span>
+    <div id="pdf-controls" class="hidden">
+      <button id="prev-page">&#8249;</button>
+      <span id="page-info">1 / 1</span>
+      <button id="next-page">&#8250;</button>
+      <button id="zoom-out">&#8722;</button>
+      <span id="zoom-level">100%</span>
+      <button id="zoom-in">+</button>
+    </div>
+    <div id="toolbar-actions">
+      <a id="download-link" download>다운로드</a>
+      <button id="print-btn">인쇄</button>
+    </div>
+  </div>
+  <div id="viewer-container">
+    <div id="loading">문서를 불러오는 중입니다...</div>
+    <div id="error" class="hidden"></div>
+    <canvas id="pdf-canvas" class="hidden"></canvas>
+    <pre id="text-content" class="hidden"></pre>
+    <img id="image-content" class="hidden" alt="문서 이미지">
+  </div>
+  <script src="/docviewer/static/viewer.js"></script>
+</body>
+</html>
