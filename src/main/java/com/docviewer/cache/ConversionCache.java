@@ -17,7 +17,7 @@ public class ConversionCache {
         this(Paths.get(System.getProperty("java.io.tmpdir"), "docviewer-cache"), ttlSeconds);
     }
 
-    ConversionCache(Path cacheDir, long ttlSeconds) throws IOException {
+    public ConversionCache(Path cacheDir, long ttlSeconds) throws IOException {
         this.cacheDir = cacheDir;
         this.ttlMillis = ttlSeconds * 1000;
         Files.createDirectories(cacheDir);
