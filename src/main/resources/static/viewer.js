@@ -68,6 +68,9 @@
     }).then(function () {
       $('page-info').textContent = num + ' / ' + pdfDoc.numPages;
       rendering = false;
+    }).catch(function (e) {
+      rendering = false;
+      showError('페이지 렌더링 실패: ' + e.message);
     });
   }
 

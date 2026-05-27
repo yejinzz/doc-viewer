@@ -7,6 +7,7 @@ import com.docviewer.detector.FileTypeDetector;
 import com.docviewer.handler.*;
 import com.sun.net.httpserver.HttpServer;
 import org.slf4j.*;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 
@@ -44,11 +45,14 @@ public class DocViewerServer {
             byte[] bytes = body.getBytes();
             exchange.getResponseHeaders().set("Content-Type", "application/json");
             exchange.sendResponseHeaders(200, bytes.length);
-            exchange.getResponseBody().write(bytes);
+            try (OutputStream out = exchange.getResponseBody()) { out.write(bytes); }
             exchange.close();
         });
         server.setExecutor(Executors.newFixedThreadPool(10));
         server.start();
+        if (config.allowedPaths.isEmpty()) {
+            log.warn("SECURITY WARNING: --allowed-paths not set. ALL filesystem paths are accessible!");
+        }
         log.info("doc-viewer started on http://localhost:{}/docviewer", config.port);
     }
 }

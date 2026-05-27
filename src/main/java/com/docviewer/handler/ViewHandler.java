@@ -38,11 +38,15 @@ public class ViewHandler implements HttpHandler {
         catch (UnsupportedEncodingException e) { sendError(exchange, 400, "Invalid path"); return; }
 
         File file = new File(filePath);
-        if (!file.exists() || !file.isFile()) { sendError(exchange, 404, "File not found"); return; }
-
         try { validatePath(filePath); }
         catch (SecurityException e) { sendError(exchange, 403, "Access denied"); return; }
 
+        if (!file.exists() || !file.isFile()) { sendError(exchange, 404, "File not found"); return; }
+
+        if (!detector.isSupported(file.getName())) {
+            sendError(exchange, 415, "Unsupported file type: " + file.getName());
+            return;
+        }
         FileTypeDetector.RenderType serverType = detector.detect(file.getName());
         String clientRenderType;
         String fileUrl;

@@ -42,6 +42,7 @@ public class ConversionCache {
             future.complete(null);
         } catch (Exception e) {
             future.completeExceptionally(e);
+            try { Files.deleteIfExists(cachedPath(cacheId)); } catch (IOException ignored) {}
             throw e;
         } finally {
             inFlight.remove(cacheId);
