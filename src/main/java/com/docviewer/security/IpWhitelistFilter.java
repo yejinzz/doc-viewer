@@ -6,7 +6,7 @@ public class IpWhitelistFilter {
     private final List<String> entries;
 
     public IpWhitelistFilter(List<String> entries) {
-        this.entries = entries;
+        this.entries = List.copyOf(entries);
     }
 
     public boolean isEmpty() {
@@ -15,6 +15,7 @@ public class IpWhitelistFilter {
 
     public boolean isAllowed(String remoteAddress) {
         if (entries.isEmpty()) return true;
+        if (remoteAddress == null) return false;
         String ip = normalize(remoteAddress);
         for (String entry : entries) {
             if (entry.contains("/")) {
