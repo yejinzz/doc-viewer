@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>doc-viewer v2 로컬 테스트</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, sans-serif; background: #f5f5f5; padding: 32px; color: #333; }
+    h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+    .subtitle { font-size: 13px; color: #888; margin-bottom: 32px; }
+
+    .section { background: #fff; border-radius: 8px; padding: 24px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .section h2 { font-size: 14px; font-weight: 600; color: #555; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 16px; }
+
+    .open-form { display: flex; gap: 8px; }
+    .open-form input {
+      flex: 1; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px;
+      font-size: 14px; font-family: 'Courier New', monospace;
+    }
+    .open-form input:focus { outline: none; border-color: #555; }
+    .btn {
+      padding: 10px 20px; background: #333; color: #fff; border: none;
+      border-radius: 6px; cursor: pointer; font-size: 14px; white-space: nowrap;
+    }
+    .btn:hover { background: #555; }
+    .btn.secondary { background: #f0f0f0; color: #333; }
+    .btn.secondary:hover { background: #e0e0e0; }
+
+    .history { margin-top: 16px; }
+    .history-empty { font-size: 13px; color: #aaa; text-align: center; padding: 16px 0; }
+    .history-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 12px; border-radius: 6px; margin-bottom: 6px; background: #f9f9f9;
+    }
+    .history-item .key { font-family: 'Courier New', monospace; font-size: 13px; flex: 1; }
+    .history-item .time { font-size: 11px; color: #aaa; }
+    .history-item .open-btn { font-size: 12px; padding: 5px 12px; }
+
+    .status-area { margin-top: 12px; }
+    .status-input-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .status-input-row input { flex: 1; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: 'Courier New', monospace; }
+    .status-input-row input:focus { outline: none; border-color: #555; }
+    .status-result {
+      padding: 10px 14px; border-radius: 6px; font-size: 13px; font-family: 'Courier New', monospace;
+      display: none;
+    }
+    .status-result.ok { background: #f0faf0; color: #2a6e2a; border: 1px solid #c0e0c0; }
+    .status-result.error { background: #fff0f0; color: #8b0000; border: 1px solid #e0c0c0; }
+
+    .guide { background: #fffbf0; border: 1px solid #ffe0a0; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+    .guide h2 { font-size: 14px; font-weight: 600; color: #a06000; margin-bottom: 12px; }
+    .guide ol { padding-left: 18px; }
+    .guide li { font-size: 13px; color: #555; line-height: 2; }
+    .guide code { background: #f0f0f0; padding: 2px 6px; border-radius: 3px; font-family: 'Courier New', monospace; font-size: 12px; color: #333; }
+
+    .health { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; flex-shrink: 0; }
+    .dot.ok { background: #4caf50; }
+    .dot.error { background: #f44336; }
+    .dot.checking { background: #ff9800; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  </style>
+</head>
+<body>
+
+  <h1>doc-viewer v2 로컬 테스트</h1>
+  <p class="subtitle">서버 주소: <code id="server-url">http://localhost:8090</code></p>
+
+  <!-- 서버 상태 -->
+  <div class="section">
+    <h2>서버 상태</h2>
+    <div class="health">
+      <div class="dot checking" id="health-dot"></div>
+      <span id="health-text">확인 중...</span>
+      <button class="btn secondary" style="margin-left:auto;font-size:12px;padding:5px 12px" onclick="checkHealth()">새로고침</button>
+    </div>
+  </div>
+
+  <!-- 사용 가이드 -->
+  <div class="guide">
+    <h2>사용 방법</h2>
+    <ol>
+      <li>터미널에서 <code>./register.sh &lt;파일경로&gt;</code> 실행 → 파일 등록 및 변환</li>
+      <li>출력된 키(예: <code>TEST_SAMPLE_0</code>)를 아래 입력창에 붙여넣고 <b>열기</b></li>
+    </ol>
+  </div>
+
+  <!-- 키 직접 입력 -->
+  <div class="section">
+    <h2>뷰어 열기</h2>
+    <div class="open-form">
+      <input type="text" id="key-input" placeholder="등록된 키 입력 (예: TEST_SAMPLE_0)" />
+      <button class="btn" onclick="openViewer()">열기</button>
+    </div>
+    <div class="history" id="history-container">
+      <div class="history-empty" id="history-empty">최근에 연 문서가 없습니다</div>
+    </div>
+  </div>
+
+  <!-- 변환 상태 확인 -->
+  <div class="section">
+    <h2>변환 상태 확인</h2>
+    <div class="status-area">
+      <div class="status-input-row">
+        <input type="text" id="status-key-input" placeholder="키 입력 (예: TEST_SAMPLE_0)" />
+        <button class="btn secondary" onclick="checkStatus()">확인</button>
+      </div>
+      <div class="status-result" id="status-result"></div>
+    </div>
+  </div>
+
+  <script src="http://localhost:8090/docviewer/static/doc-viewer-client.js"></script>
+  <script>
+    var SERVER = 'http://localhost:8090';
+    var HISTORY_KEY = 'docviewer_history';
+
+    // 서버 상태 확인
+    function checkHealth() {
+      var dot = document.getElementById('health-dot');
+      var text = document.getElementById('health-text');
+      dot.className = 'dot checking';
+      text.textContent = '확인 중...';
+      fetch(SERVER + '/docviewer/health')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          dot.className = 'dot ok';
+          text.textContent = '서버 실행 중 · LibreOffice ' + (data.libreoffice ? '준비됨' : '초기화 전 (첫 변환 시 자동 시작)');
+        })
+        .catch(function() {
+          dot.className = 'dot error';
+          text.textContent = '서버에 연결할 수 없습니다 — java -jar doc-viewer-1.0.0.jar 실행 여부 확인';
+        });
+    }
+
+    // 뷰어 열기
+    function openViewer() {
+      var key = document.getElementById('key-input').value.trim();
+      if (!key) return;
+      addHistory(key);
+      DocViewer.open(key);
+      document.getElementById('key-input').value = '';
+    }
+
+    // 변환 상태 확인
+    function checkStatus() {
+      var key = document.getElementById('status-key-input').value.trim();
+      if (!key) return;
+      var result = document.getElementById('status-result');
+      result.style.display = 'none';
+      fetch(SERVER + '/docviewer/api/status/' + encodeURIComponent(key))
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          result.style.display = 'block';
+          if (data.status === 'ok') {
+            var statusText = { converted: '✓ 변환 완료', registered: '⏳ 변환 중 (잠시 후 다시 확인)', error: '✗ 변환 실패' };
+            result.className = 'status-result ' + (data.convertStatus === 'converted' ? 'ok' : 'error');
+            result.textContent = '[' + key + '] ' + (statusText[data.convertStatus] || data.convertStatus);
+          } else {
+            result.className = 'status-result error';
+            result.textContent = '등록되지 않은 키입니다: ' + key;
+          }
+        })
+        .catch(function() {
+          result.style.display = 'block';
+          result.className = 'status-result error';
+          result.textContent = '서버 연결 실패';
+        });
+    }
+
+    // 히스토리
+    function addHistory(key) {
+      var history = getHistory().filter(function(h) { return h.key !== key; });
+      history.unshift({ key: key, time: new Date().toLocaleTimeString() });
+      if (history.length > 10) history = history.slice(0, 10);
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+      renderHistory();
+    }
+
+    function getHistory() {
+      try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch(e) { return []; }
+    }
+
+    function renderHistory() {
+      var history = getHistory();
+      var container = document.getElementById('history-container');
+      var empty = document.getElementById('history-empty');
+      if (history.length === 0) { empty.style.display = 'block'; return; }
+      empty.style.display = 'none';
+      var items = container.querySelectorAll('.history-item');
+      items.forEach(function(el) { el.remove(); });
+      history.forEach(function(h) {
+        var div = document.createElement('div');
+        div.className = 'history-item';
+        div.innerHTML =
+          '<span class="key">' + escapeHtml(h.key) + '</span>' +
+          '<span class="time">' + h.time + '</span>' +
+          '<button class="btn secondary open-btn" onclick="DocViewer.open(\'' + escapeHtml(h.key) + '\')">열기</button>';
+        container.appendChild(div);
+      });
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // Enter 키 지원
+    document.getElementById('key-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') openViewer(); });
+    document.getElementById('status-key-input').addEventListener('keydown', function(e) { if (e.key === 'Enter') checkStatus(); });
+
+    // 초기화
+    checkHealth();
+    renderHistory();
+  </script>
+</body>
+</html>
