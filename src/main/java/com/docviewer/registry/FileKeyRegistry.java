@@ -63,7 +63,7 @@ public class FileKeyRegistry implements Closeable {
         }
     }
 
-    public void register(String key, String filePath, String originalName) throws SQLException {
+    public synchronized void register(String key, String filePath, String originalName) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(
                 "INSERT OR REPLACE INTO file_keys (key, file_path, original_name, convert_status) VALUES (?,?,?,'registered')")) {
             ps.setString(1, key);
@@ -73,7 +73,7 @@ public class FileKeyRegistry implements Closeable {
         }
     }
 
-    public void markConverted(String key, String fileHash, long fileSize, long lastModified) throws SQLException {
+    public synchronized void markConverted(String key, String fileHash, long fileSize, long lastModified) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(
                 "UPDATE file_keys SET file_hash=?, file_size=?, last_modified=?, " +
                 "convert_status='converted', converted_at=datetime('now'), error_message=NULL WHERE key=?")) {
@@ -85,7 +85,7 @@ public class FileKeyRegistry implements Closeable {
         }
     }
 
-    public void markError(String key, String errorMessage) throws SQLException {
+    public synchronized void markError(String key, String errorMessage) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(
                 "UPDATE file_keys SET convert_status='error', error_message=? WHERE key=?")) {
             ps.setString(1, errorMessage);
@@ -94,7 +94,7 @@ public class FileKeyRegistry implements Closeable {
         }
     }
 
-    public void updateMetadata(String key, String fileHash, long fileSize, long lastModified) throws SQLException {
+    public synchronized void updateMetadata(String key, String fileHash, long fileSize, long lastModified) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(
                 "UPDATE file_keys SET file_hash=?, file_size=?, last_modified=? WHERE key=?")) {
             ps.setString(1, fileHash);
@@ -105,7 +105,7 @@ public class FileKeyRegistry implements Closeable {
         }
     }
 
-    public FileKeyEntry findByKey(String key) throws SQLException {
+    public synchronized FileKeyEntry findByKey(String key) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(
                 "SELECT key, file_path, original_name, file_hash, file_size, last_modified, convert_status " +
                 "FROM file_keys WHERE key=?")) {
@@ -121,7 +121,7 @@ public class FileKeyRegistry implements Closeable {
         }
     }
 
-    public String getStatus(String key) throws SQLException {
+    public synchronized String getStatus(String key) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement(
                 "SELECT convert_status FROM file_keys WHERE key=?")) {
             ps.setString(1, key);
@@ -131,7 +131,7 @@ public class FileKeyRegistry implements Closeable {
         }
     }
 
-    public void delete(String key) throws SQLException {
+    public synchronized void delete(String key) throws SQLException {
         try (PreparedStatement ps = conn.prepareStatement("DELETE FROM file_keys WHERE key=?")) {
             ps.setString(1, key);
             ps.executeUpdate();
@@ -139,7 +139,7 @@ public class FileKeyRegistry implements Closeable {
     }
 
     @Override
-    public void close() {
+    public synchronized void close() {
         try {
             if (conn != null && !conn.isClosed()) conn.close();
         } catch (SQLException e) {

@@ -1,6 +1,7 @@
 package com.docviewer.util;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.*;
 
@@ -23,8 +24,8 @@ public class HashUtil {
     public static String sha256String(String input) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
-            return toHex(md.digest(input.getBytes("UTF-8")));
-        } catch (Exception e) {
+            return toHex(md.digest(input.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
     }
