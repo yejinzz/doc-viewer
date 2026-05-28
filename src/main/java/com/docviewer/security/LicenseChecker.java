@@ -13,7 +13,7 @@ public class LicenseChecker {
 
     public LicenseChecker(List<String> allowedIps, List<String> allowedDomains) {
         this.ipFilter = new IpWhitelistFilter(allowedIps);
-        this.allowedDomains = allowedDomains;
+        this.allowedDomains = List.copyOf(allowedDomains);
         this.unconfigured = allowedIps.isEmpty() && allowedDomains.isEmpty();
         if (unconfigured) {
             log.warn("SECURITY WARNING: license.allowed-ips and license.allowed-domains are not configured. All requests are allowed.");
