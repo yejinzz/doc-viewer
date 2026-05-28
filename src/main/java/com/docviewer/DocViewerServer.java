@@ -6,12 +6,12 @@ import com.docviewer.converter.LibreOfficeConverter;
 import com.docviewer.detector.FileTypeDetector;
 import com.docviewer.handler.*;
 import com.docviewer.registry.FileKeyRegistry;
-import com.docviewer.security.LicenseChecker;
+import com.docviewer.security.*;
 import com.sun.net.httpserver.HttpServer;
 import org.slf4j.*;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.util.concurrent.Executors;
 
 public class DocViewerServer {
@@ -25,13 +25,17 @@ public class DocViewerServer {
             System.exit(1);
         }
 
-        ConversionCache cache = new ConversionCache(Paths.get(config.resultDir), config.cacheTtlSeconds);
+        Path resultDir = Paths.get(config.resultDir);
+        Files.createDirectories(resultDir);
+
+        ConversionCache cache = new ConversionCache(resultDir, config.cacheTtlSeconds);
         cache.cleanup();
 
-        FileTypeDetector detector = new FileTypeDetector();
+        FileKeyRegistry registry = new FileKeyRegistry(resultDir.resolve("docviewer.db"));
+        FileTypeDetector detector = new FileTypeDetector(config.allowedExtensions);
         LibreOfficeConverter converter = new LibreOfficeConverter(config);
-        FileKeyRegistry registry = new FileKeyRegistry(Paths.get(config.resultDir).resolve("filekeys.db"));
         LicenseChecker license = new LicenseChecker(config.licenseAllowedIps, config.licenseAllowedDomains);
+        IpWhitelistFilter apiFilter = new IpWhitelistFilter(config.apiAllowedIps);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             log.info("Shutting down doc-viewer...");
@@ -40,15 +44,19 @@ public class DocViewerServer {
         }));
 
         HttpServer server = HttpServer.create(new InetSocketAddress(config.port), 100);
-        server.createContext("/docviewer/view",   new ViewHandler(config, converter, cache, detector, registry, license));
-        server.createContext("/docviewer/file",   new FileHandler(cache, config, detector, registry));
-        server.createContext("/docviewer/static", new StaticHandler());
+        server.createContext("/docviewer/view",
+            new ViewHandler(config, converter, cache, detector, registry, license));
+        server.createContext("/docviewer/file",
+            new FileHandler(cache, config, detector, registry));
+        server.createContext("/docviewer/static",
+            new StaticHandler());
+        server.createContext("/docviewer/api",
+            new ApiHandler(config, converter, cache, detector, registry, apiFilter));
         server.createContext("/docviewer/health", exchange -> {
             String body = String.format(
                 "{\"status\":\"ok\",\"libreoffice\":%b,\"port\":%d}",
-                converter.isAlive(), config.port
-            );
-            byte[] bytes = body.getBytes();
+                converter.isAlive(), config.port);
+            byte[] bytes = body.getBytes("UTF-8");
             exchange.getResponseHeaders().set("Content-Type", "application/json");
             exchange.sendResponseHeaders(200, bytes.length);
             try (OutputStream out = exchange.getResponseBody()) { out.write(bytes); }
@@ -56,9 +64,11 @@ public class DocViewerServer {
         });
         server.setExecutor(Executors.newFixedThreadPool(10));
         server.start();
+
         if (config.allowedPaths.isEmpty()) {
             log.warn("SECURITY WARNING: --allowed-paths not set. ALL filesystem paths are accessible!");
         }
-        log.info("doc-viewer started on http://localhost:{}/docviewer", config.port);
+        log.info("doc-viewer v2 started on http://localhost:{}/docviewer", config.port);
+        log.info("Result dir: {}", resultDir.toAbsolutePath());
     }
 }
