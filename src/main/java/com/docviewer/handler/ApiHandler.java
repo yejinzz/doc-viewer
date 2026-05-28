@@ -87,12 +87,12 @@ public class ApiHandler implements HttpHandler {
             if (!allowed) { sendJson(exchange, 403, "{\"status\":\"error\",\"message\":\"Path not allowed\"}"); return; }
         }
 
+        if (Files.isSymbolicLink(resolved)) {
+            sendJson(exchange, 403, "{\"status\":\"error\",\"message\":\"Symbolic links not allowed\"}"); return;
+        }
         File file = resolved.toFile();
         if (!file.exists() || !file.isFile()) {
             sendJson(exchange, 404, "{\"status\":\"error\",\"message\":\"File not found\"}"); return;
-        }
-        if (Files.isSymbolicLink(resolved)) {
-            sendJson(exchange, 403, "{\"status\":\"error\",\"message\":\"Symbolic links not allowed\"}"); return;
         }
         if (file.length() > config.maxFileSizeBytes) {
             sendJson(exchange, 413, "{\"status\":\"error\",\"message\":\"File too large (max " + (config.maxFileSizeBytes / 1024 / 1024) + "MB)\"}"); return;
