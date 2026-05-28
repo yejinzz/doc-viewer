@@ -13,12 +13,8 @@ public class ConversionCache {
     private final long ttlMillis;
     private final ConcurrentMap<String, CompletableFuture<Void>> inFlight = new ConcurrentHashMap<>();
 
-    public ConversionCache(long ttlSeconds) throws IOException {
-        this(Paths.get(System.getProperty("java.io.tmpdir"), "docviewer-cache"), ttlSeconds);
-    }
-
-    public ConversionCache(Path cacheDir, long ttlSeconds) throws IOException {
-        this.cacheDir = cacheDir;
+    public ConversionCache(Path resultDir, long ttlSeconds) throws IOException {
+        this.cacheDir = resultDir.resolve("cache");
         this.ttlMillis = ttlSeconds * 1000;
         Files.createDirectories(cacheDir);
     }
@@ -56,6 +52,12 @@ public class ConversionCache {
 
     public boolean isCached(String cacheId) {
         return Files.exists(cachedPath(cacheId));
+    }
+
+    public void invalidateCache(File source) {
+        String id = cacheId(source);
+        try { Files.deleteIfExists(cachedPath(id)); }
+        catch (IOException e) { log.warn("Failed to invalidate cache for {}", source.getName(), e); }
     }
 
     public void cleanup() {

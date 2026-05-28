@@ -9,6 +9,7 @@ import com.sun.net.httpserver.HttpServer;
 import org.slf4j.*;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.nio.file.Paths;
 import java.util.concurrent.Executors;
 
 public class DocViewerServer {
@@ -22,7 +23,7 @@ public class DocViewerServer {
             System.exit(1);
         }
 
-        ConversionCache cache = new ConversionCache(config.cacheTtlSeconds);
+        ConversionCache cache = new ConversionCache(Paths.get(config.resultDir), config.cacheTtlSeconds);
         cache.cleanup();
 
         FileTypeDetector detector = new FileTypeDetector();

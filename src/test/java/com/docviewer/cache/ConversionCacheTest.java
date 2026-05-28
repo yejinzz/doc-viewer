@@ -84,4 +84,14 @@ class ConversionCacheTest {
 
         assertFalse(Files.exists(shortTtl.cachedPath(id)));
     }
+
+    @Test
+    void invalidateCacheDeletesCachedFile() throws Exception {
+        File source = File.createTempFile("src", ".hwp", tempDir.toFile());
+        String id = cache.getOrConvert(source, (src, dest) ->
+            java.nio.file.Files.write(dest.toPath(), "pdf".getBytes()));
+        assertTrue(cache.isCached(id));
+        cache.invalidateCache(source);
+        assertFalse(cache.isCached(id));
+    }
 }
