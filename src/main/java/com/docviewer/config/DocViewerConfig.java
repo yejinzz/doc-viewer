@@ -31,13 +31,13 @@ public class DocViewerConfig {
         this.loPoolSize = b.loPoolSize;
         this.cacheTtlSeconds = b.cacheTtlSeconds;
         this.convertTimeoutSeconds = b.convertTimeoutSeconds;
-        this.allowedPaths = Collections.unmodifiableList(b.allowedPaths);
+        this.allowedPaths = Collections.unmodifiableList(new ArrayList<>(b.allowedPaths));
         this.resultDir = b.resultDir;
         this.maxFileSizeBytes = b.maxFileSizeBytes;
         this.allowedExtensions = Collections.unmodifiableSet(b.allowedExtensions);
-        this.licenseAllowedIps = Collections.unmodifiableList(b.licenseAllowedIps);
-        this.licenseAllowedDomains = Collections.unmodifiableList(b.licenseAllowedDomains);
-        this.apiAllowedIps = Collections.unmodifiableList(b.apiAllowedIps);
+        this.licenseAllowedIps = Collections.unmodifiableList(new ArrayList<>(b.licenseAllowedIps));
+        this.licenseAllowedDomains = Collections.unmodifiableList(new ArrayList<>(b.licenseAllowedDomains));
+        this.apiAllowedIps = Collections.unmodifiableList(new ArrayList<>(b.apiAllowedIps));
     }
 
     public static DocViewerConfig fromArgs(String[] args) {
