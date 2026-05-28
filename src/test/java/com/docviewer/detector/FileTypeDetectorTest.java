@@ -64,4 +64,21 @@ class FileTypeDetectorTest {
     void mimeTypeForUnknownFallback() {
         assertEquals("application/octet-stream", detector.mimeType("file.xyz"));
     }
+
+    @Test
+    void customAllowedExtensionsRestrictsIsSupported() {
+        FileTypeDetector restricted = new FileTypeDetector(java.util.Set.of("pdf", "hwp"));
+        assertTrue(restricted.isSupported("report.pdf"));
+        assertTrue(restricted.isSupported("doc.hwp"));
+        assertFalse(restricted.isSupported("sheet.xlsx")); // not in custom list
+        assertFalse(restricted.isSupported("image.png"));  // not in custom list
+    }
+
+    @Test
+    void detectStillWorksWithCustomExtensions() {
+        FileTypeDetector restricted = new FileTypeDetector(java.util.Set.of("pdf", "hwp", "jpg"));
+        assertEquals(FileTypeDetector.RenderType.PDF, restricted.detect("doc.pdf"));
+        assertEquals(FileTypeDetector.RenderType.IMAGE, restricted.detect("photo.jpg"));
+        assertEquals(FileTypeDetector.RenderType.LIBREOFFICE, restricted.detect("file.hwp"));
+    }
 }

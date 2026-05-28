@@ -12,10 +12,6 @@ public class FileTypeDetector {
     );
     private static final Set<String> TEXT_EXTS = Set.of("txt", "log", "csv");
     private static final Set<String> PDF_EXTS = Set.of("pdf");
-    private static final Set<String> LO_EXTS = Set.of(
-        "doc", "docx", "hwp", "hwpx", "xls", "xlsx", "ods",
-        "ppt", "pptx", "odp", "odt", "rtf"
-    );
     private static final Map<String, String> MIME_MAP = Map.ofEntries(
         Map.entry("pdf",  "application/pdf"),
         Map.entry("txt",  "text/plain"),
@@ -28,6 +24,16 @@ public class FileTypeDetector {
         Map.entry("bmp",  "image/bmp"),
         Map.entry("svg",  "image/svg+xml")
     );
+
+    private final Set<String> allowedExtensions;
+
+    public FileTypeDetector() {
+        this.allowedExtensions = null;
+    }
+
+    public FileTypeDetector(Set<String> allowedExtensions) {
+        this.allowedExtensions = allowedExtensions;
+    }
 
     public RenderType detect(String filename) {
         String ext = ext(filename);
@@ -43,8 +49,14 @@ public class FileTypeDetector {
 
     public boolean isSupported(String filename) {
         String ext = ext(filename);
+        if (allowedExtensions != null) return allowedExtensions.contains(ext);
         return PDF_EXTS.contains(ext) || TEXT_EXTS.contains(ext)
-            || IMAGE_EXTS.contains(ext) || LO_EXTS.contains(ext);
+            || IMAGE_EXTS.contains(ext) || isLibreOfficeExt(ext);
+    }
+
+    private boolean isLibreOfficeExt(String ext) {
+        return Set.of("doc","docx","hwp","hwpx","xls","xlsx","ods",
+                      "ppt","pptx","odp","odt","rtf").contains(ext);
     }
 
     private String ext(String filename) {
