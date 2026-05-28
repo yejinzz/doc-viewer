@@ -5,6 +5,8 @@ import com.docviewer.config.DocViewerConfig;
 import com.docviewer.converter.LibreOfficeConverter;
 import com.docviewer.detector.FileTypeDetector;
 import com.docviewer.handler.*;
+import com.docviewer.registry.FileKeyRegistry;
+import com.docviewer.security.LicenseChecker;
 import com.sun.net.httpserver.HttpServer;
 import org.slf4j.*;
 import java.io.OutputStream;
@@ -28,14 +30,17 @@ public class DocViewerServer {
 
         FileTypeDetector detector = new FileTypeDetector();
         LibreOfficeConverter converter = new LibreOfficeConverter(config);
+        FileKeyRegistry registry = new FileKeyRegistry(Paths.get(config.resultDir).resolve("filekeys.db"));
+        LicenseChecker license = new LicenseChecker(config.licenseAllowedIps, config.licenseAllowedDomains);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             log.info("Shutting down doc-viewer...");
             converter.shutdown();
+            registry.close();
         }));
 
         HttpServer server = HttpServer.create(new InetSocketAddress(config.port), 100);
-        server.createContext("/docviewer/view",   new ViewHandler(config, converter, cache, detector));
+        server.createContext("/docviewer/view",   new ViewHandler(config, converter, cache, detector, registry, license));
         server.createContext("/docviewer/file",   new FileHandler(cache, config, detector));
         server.createContext("/docviewer/static", new StaticHandler());
         server.createContext("/docviewer/health", exchange -> {
