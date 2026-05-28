@@ -41,7 +41,7 @@ public class DocViewerServer {
 
         HttpServer server = HttpServer.create(new InetSocketAddress(config.port), 100);
         server.createContext("/docviewer/view",   new ViewHandler(config, converter, cache, detector, registry, license));
-        server.createContext("/docviewer/file",   new FileHandler(cache, config, detector));
+        server.createContext("/docviewer/file",   new FileHandler(cache, config, detector, registry));
         server.createContext("/docviewer/static", new StaticHandler());
         server.createContext("/docviewer/health", exchange -> {
             String body = String.format(
