@@ -47,7 +47,7 @@ class FileHandlerTest {
 
     @Test
     void servesCachedPdfById() throws Exception {
-        String cacheId = "testid00testid00";
+        String cacheId = "cafe0000cafe0000";
         Files.createDirectories(cache.cachedPath(cacheId).getParent());
         Files.write(cache.cachedPath(cacheId), "%PDF-1.4 content".getBytes());
 
@@ -61,7 +61,7 @@ class FileHandlerTest {
     @Test
     void returns404ForMissingCacheId() throws Exception {
         HttpResponse<String> resp = HttpClient.newHttpClient().send(
-            HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/docviewer/file?id=nonexistent")).build(),
+            HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/docviewer/file?id=deadbeef00000001")).build(),
             HttpResponse.BodyHandlers.ofString());
         assertEquals(404, resp.statusCode());
     }

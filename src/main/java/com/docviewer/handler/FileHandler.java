@@ -14,7 +14,7 @@ import java.util.regex.*;
 public class FileHandler implements HttpHandler {
     private static final Logger log = LoggerFactory.getLogger(FileHandler.class);
     private static final Pattern KEY_PATTERN = Pattern.compile("^[A-Za-z0-9_\\-]{1,100}$");
-    private static final Pattern CACHE_ID_PATTERN = Pattern.compile("^[a-zA-Z0-9]{1,64}$");
+    private static final Pattern CACHE_ID_PATTERN = Pattern.compile("^[a-f0-9]{1,64}$");
 
     private final ConversionCache cache;
     private final DocViewerConfig config;
