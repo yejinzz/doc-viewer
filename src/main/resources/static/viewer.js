@@ -4,29 +4,44 @@
   var cfg = window.DOCVIEWER_CONFIG;
   var $ = function (id) { return document.getElementById(id); };
 
-  $('filename').textContent = cfg.filename;
+  $('filename').textContent = cfg.filename || '문서 뷰어';
   $('download-link').href = cfg.fileUrl;
-  $('download-link').setAttribute('download', cfg.filename);
+  $('download-link').setAttribute('download', cfg.filename || 'document');
   $('print-btn').addEventListener('click', function () { window.print(); });
 
-  function showError(msg) {
+  function showError(msg, showDownload) {
     $('loading').classList.add('hidden');
-    $('error').textContent = msg;
-    $('error').classList.remove('hidden');
+    $('error-message').textContent = msg;
+    if (showDownload && cfg.downloadKey) {
+      $('error-download').innerHTML =
+        '<a href="/docviewer/file?key=' + encodeURIComponent(cfg.downloadKey) + '">원본 파일 다운로드</a>';
+    }
+    $('error').style.display = 'block';
+  }
+
+  function showLoading(text) {
+    $('loading-text').textContent = text || '문서를 불러오는 중입니다...';
+    $('loading').classList.remove('hidden');
   }
 
   // IMAGE
   if (cfg.renderType === 'image') {
     $('loading').classList.add('hidden');
-    $('image-content').src = cfg.fileUrl;
-    $('image-content').classList.remove('hidden');
+    var img = $('image-content');
+    img.onerror = function () { showError('이미지를 불러올 수 없습니다.', true); };
+    img.src = cfg.fileUrl;
+    img.classList.remove('hidden');
     return;
   }
 
   // TEXT
   if (cfg.renderType === 'text') {
+    showLoading('텍스트 파일을 불러오는 중...');
     fetch(cfg.fileUrl)
-      .then(function (r) { return r.arrayBuffer(); })
+      .then(function (r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.arrayBuffer();
+      })
       .then(function (buf) {
         var text;
         try { text = new TextDecoder('euc-kr').decode(buf); }
@@ -35,13 +50,13 @@
         $('text-content').textContent = text;
         $('text-content').classList.remove('hidden');
       })
-      .catch(function (e) { showError('파일을 불러올 수 없습니다: ' + e.message); });
+      .catch(function (e) { showError('파일을 불러올 수 없습니다: ' + e.message, true); });
     return;
   }
 
-  // PDF (cfg.renderType === 'pdf')
+  // PDF
   var pdfjsLib = window['pdfjs-dist/build/pdf'];
-  if (!pdfjsLib) { showError('pdf.js 로드 실패'); return; }
+  if (!pdfjsLib) { showError('PDF 뷰어를 초기화할 수 없습니다. 페이지를 새로고침하세요.', false); return; }
   pdfjsLib.GlobalWorkerOptions.workerSrc = '/docviewer/static/lib/pdf.worker.min.js';
 
   var pdfDoc = null;
@@ -51,9 +66,9 @@
   var ctx = canvas.getContext('2d');
   var rendering = false;
 
-  function containerWidth() {
-    return $('viewer-container').clientWidth - 40;
-  }
+  showLoading('문서를 변환하는 중입니다...');
+
+  function containerWidth() { return $('viewer-container').clientWidth - 40; }
 
   function renderPage(num) {
     if (rendering) return Promise.resolve();
@@ -66,11 +81,11 @@
       canvas.height = vp.height;
       return page.render({ canvasContext: ctx, viewport: vp }).promise;
     }).then(function () {
-      $('page-info').textContent = num + ' / ' + pdfDoc.numPages;
+      $('page-info').textContent = currentPage + ' / ' + pdfDoc.numPages;
       rendering = false;
     }).catch(function (e) {
       rendering = false;
-      showError('페이지 렌더링 실패: ' + e.message);
+      showError('페이지를 렌더링할 수 없습니다: ' + e.message, true);
     });
   }
 
@@ -81,18 +96,16 @@
     $('pdf-controls').classList.remove('hidden');
     return renderPage(1);
   }).catch(function (e) {
-    showError('PDF를 렌더링할 수 없습니다: ' + e.message);
+    showError('PDF를 열 수 없습니다: ' + e.message, true);
   });
 
   $('prev-page').addEventListener('click', function () {
     if (currentPage <= 1) return;
-    currentPage--;
-    renderPage(currentPage);
+    currentPage--; renderPage(currentPage);
   });
   $('next-page').addEventListener('click', function () {
     if (!pdfDoc || currentPage >= pdfDoc.numPages) return;
-    currentPage++;
-    renderPage(currentPage);
+    currentPage++; renderPage(currentPage);
   });
   $('zoom-in').addEventListener('click', function () {
     scale = Math.min(scale + 0.25, 3.0);
@@ -104,8 +117,5 @@
     $('zoom-level').textContent = Math.round(scale * 100) + '%';
     renderPage(currentPage);
   });
-
-  window.addEventListener('resize', function () {
-    if (pdfDoc) renderPage(currentPage);
-  });
+  window.addEventListener('resize', function () { if (pdfDoc) renderPage(currentPage); });
 })();

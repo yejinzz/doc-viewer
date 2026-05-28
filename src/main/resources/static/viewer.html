@@ -25,8 +25,15 @@
     </div>
   </div>
   <div id="viewer-container">
-    <div id="loading">문서를 불러오는 중입니다...</div>
-    <div id="error" class="hidden"></div>
+    <div id="loading">
+      <div class="spinner"></div>
+      <div id="loading-text">문서를 불러오는 중입니다...</div>
+    </div>
+    <div id="error">
+      <div class="error-icon">✕</div>
+      <div class="error-message" id="error-message"></div>
+      <div class="error-download" id="error-download"></div>
+    </div>
     <canvas id="pdf-canvas" class="hidden"></canvas>
     <pre id="text-content" class="hidden"></pre>
     <img id="image-content" class="hidden" alt="문서 이미지">
