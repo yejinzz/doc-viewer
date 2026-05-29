@@ -157,6 +157,52 @@ class ApiHandlerTest {
         assertNull(registry.getStatus("FILE_DEL_0"));
     }
 
+    @Test
+    void hwpConvertSkipsConverter() throws Exception {
+        // converter가 호출되면 무조건 실패하는 서버를 별도 기동
+        DocumentConverter failConverter = new DocumentConverter() {
+            public void convert(File src, File dest) throws Exception {
+                throw new RuntimeException("converter must not be called for HWP");
+            }
+            public boolean isAlive() { return true; }
+            public void shutdown() {}
+        };
+        DocViewerConfig cfg = DocViewerConfig.fromArgs(new String[]{
+            "--result-dir=" + tempDir.toAbsolutePath(),
+            "--allowed-paths=" + tempDir.toAbsolutePath(),
+            "--api-allowed-ips=127.0.0.1"
+        });
+        FileTypeDetector det = new FileTypeDetector(cfg.allowedExtensions);
+        IpWhitelistFilter f = new IpWhitelistFilter(cfg.apiAllowedIps);
+        ConversionCache c = new ConversionCache(tempDir, 86400L);
+
+        HttpServer s = HttpServer.create(new InetSocketAddress(0), 0);
+        s.createContext("/docviewer/api",
+            new ApiHandler(cfg, failConverter, c, det, registry, f));
+        s.setExecutor(null);
+        s.start();
+        int p = s.getAddress().getPort();
+
+        try {
+            File hwp = File.createTempFile("skip", ".hwp", tempDir.toFile());
+            Files.write(hwp.toPath(), "fake hwp".getBytes());
+            String body = String.format(
+                "{\"key\":\"FILE_HWP_SKIP_0\",\"path\":\"%s\",\"originalName\":\"문서.hwp\",\"fileHash\":\"\"}",
+                hwp.getAbsolutePath().replace("\\", "\\\\"));
+
+            HttpResponse<String> resp = HttpClient.newHttpClient().send(
+                HttpRequest.newBuilder(URI.create("http://localhost:" + p + "/docviewer/api/convert"))
+                    .POST(HttpRequest.BodyPublishers.ofString(body)).build(),
+                HttpResponse.BodyHandlers.ofString());
+
+            assertEquals(200, resp.statusCode());
+            assertTrue(resp.body().contains("\"status\":\"ok\""));
+            assertEquals("converted", registry.getStatus("FILE_HWP_SKIP_0"));
+        } finally {
+            s.stop(0);
+        }
+    }
+
     private HttpResponse<String> post(String path, String body) throws Exception {
         return HttpClient.newHttpClient().send(
             HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))

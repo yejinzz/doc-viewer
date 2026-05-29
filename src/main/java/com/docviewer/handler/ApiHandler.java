@@ -104,7 +104,10 @@ public class ApiHandler implements HttpHandler {
 
         try {
             registry.register(key, resolved.toString(), displayName);
-            cache.getOrConvert(file, converter::convert);
+            FileTypeDetector.RenderType fileType = detector.detect(displayName);
+            if (fileType != FileTypeDetector.RenderType.HWP) {
+                cache.getOrConvert(file, converter::convert);
+            }
             String hash = HashUtil.sha256File(file);
             registry.markConverted(key, hash, file.length(), file.lastModified());
             log.info("Converted and registered key={} path={}", key, resolved);
@@ -131,8 +134,11 @@ public class ApiHandler implements HttpHandler {
             sendJson(exchange, 404, "{\"status\":\"error\",\"message\":\"File not found\"}"); return;
         }
         try {
-            cache.invalidateCache(file);
-            cache.getOrConvert(file, converter::convert);
+            FileTypeDetector.RenderType fileType = detector.detect(entry.originalName != null ? entry.originalName : file.getName());
+            if (fileType != FileTypeDetector.RenderType.HWP) {
+                cache.invalidateCache(file);
+                cache.getOrConvert(file, converter::convert);
+            }
             String hash = HashUtil.sha256File(file);
             registry.markConverted(key, hash, file.length(), file.lastModified());
             sendJson(exchange, 200, "{\"status\":\"ok\",\"key\":\"" + key + "\"}");
