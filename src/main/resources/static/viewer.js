@@ -63,6 +63,16 @@
         return r.arrayBuffer();
       })
       .then(function(buf) {
+        // measureTextWidth 등록 (rhwp 필수 설정 — WASM init 전에 호출)
+        if (!globalThis.measureTextWidth) {
+          var _ctx = null;
+          var _lastFont = '';
+          globalThis.measureTextWidth = function(font, text) {
+            if (!_ctx) _ctx = document.createElement('canvas').getContext('2d');
+            if (font !== _lastFont) { _ctx.font = font; _lastFont = font; }
+            return _ctx.measureText(text).width;
+          };
+        }
         return import('/docviewer/static/lib/rhwp/rhwp.js').then(function(mod) {
           return mod.default({ module_or_path: '/docviewer/static/lib/rhwp/rhwp_bg.wasm' })
             .then(function() { return mod; });
