@@ -26,12 +26,13 @@ public class DispatchingConverter implements DocumentConverter {
 
     @Override
     public boolean isAlive() {
-        return libreOfficeConverter.isAlive();
+        return libreOfficeConverter.isAlive() && hwpConverter.isAlive();
     }
 
     @Override
     public void shutdown() {
         libreOfficeConverter.shutdown();
+        hwpConverter.shutdown();
     }
 
     private String ext(String filename) {

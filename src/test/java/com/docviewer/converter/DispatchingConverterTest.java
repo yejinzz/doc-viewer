@@ -68,7 +68,7 @@ class DispatchingConverterTest {
     }
 
     @Test
-    void isAlive_delegatesToLibreOfficeConverter() {
+    void isAlive_delegatesToBothConverters() {
         RecordingConverter lo = new RecordingConverter();
         RecordingConverter hwp = new RecordingConverter();
         DispatchingConverter dispatcher = new DispatchingConverter(lo, hwp);
@@ -78,10 +78,13 @@ class DispatchingConverterTest {
 
         lo.alive = true;
         assertTrue(dispatcher.isAlive());
+
+        hwp.alive = false;
+        assertFalse(dispatcher.isAlive());
     }
 
     @Test
-    void shutdown_delegatesToLibreOfficeConverter() {
+    void shutdown_delegatesToBothConverters() {
         RecordingConverter lo = new RecordingConverter();
         RecordingConverter hwp = new RecordingConverter();
         DispatchingConverter dispatcher = new DispatchingConverter(lo, hwp);
@@ -89,6 +92,6 @@ class DispatchingConverterTest {
         dispatcher.shutdown();
 
         assertTrue(lo.shutdownCalled);
-        assertFalse(hwp.shutdownCalled);
+        assertTrue(hwp.shutdownCalled);
     }
 }
