@@ -346,22 +346,51 @@ sudo systemctl status doc-viewer
 
 ### 폰트 설치 (Linux, 한글 깨짐 방지)
 
-한글 폰트가 없으면 HWP/HWPX 변환 결과 PDF에서 글자가 깨집니다.
+한글 폰트가 없으면 HWP/HWPX 변환 결과 PDF에서 글자가 깨지거나 레이아웃이 틀어집니다.
+
+#### 1단계: 오픈소스 한글 폰트 (기본)
 
 ```bash
 # Ubuntu/Debian — 먼저 사용 가능한 패키지 확인 (버전마다 다름)
 apt-cache search fonts-nanum
 
-# 확인된 패키지명으로 설치 (예시)
+# 확인된 패키지명으로 설치
 sudo apt install fonts-nanum fonts-nanum-extra   # 일부 버전
 sudo apt install fonts-nanum fonts-nanum-coding  # 다른 버전
 ```
 
-설치 후 폰트 캐시 갱신:
+#### 2단계: Windows 핵심 폰트 추가 (레이아웃 정확도 향상)
+
+굴림, 바탕, 돋움, 맑은 고딕은 한국 업무 문서에서 가장 많이 쓰이는 폰트입니다.
+이 폰트들이 없으면 LibreOffice가 대체 폰트로 렌더링하면서 줄바꿈 위치나 페이지 수가 달라질 수 있습니다.
+
+Windows 서버 또는 WSL 환경에서 직접 복사:
+
+```bash
+# WSL 환경 (Windows 폰트 디렉토리에 직접 접근 가능)
+sudo cp /mnt/c/Windows/Fonts/gulim.ttc  /usr/share/fonts/truetype/
+sudo cp /mnt/c/Windows/Fonts/batang.ttc /usr/share/fonts/truetype/
+sudo cp /mnt/c/Windows/Fonts/dotum.ttc  /usr/share/fonts/truetype/
+sudo cp /mnt/c/Windows/Fonts/malgun.ttf /usr/share/fonts/truetype/
+```
+
+원격 Linux 서버라면 Windows에서 먼저 복사 후 전송:
+
+```bash
+# Windows에서 SCP로 서버에 전송
+scp C:\Windows\Fonts\gulim.ttc  user@server:/usr/share/fonts/truetype/
+scp C:\Windows\Fonts\batang.ttc user@server:/usr/share/fonts/truetype/
+scp C:\Windows\Fonts\dotum.ttc  user@server:/usr/share/fonts/truetype/
+scp C:\Windows\Fonts\malgun.ttf user@server:/usr/share/fonts/truetype/
+```
+
+> **라이선스 참고**: 이 폰트들은 Windows 라이선스에 포함됩니다. Windows가 정식 설치된 서버 환경이거나 Windows 라이선스를 보유한 경우에 사용하세요.
+
+폰트 캐시 갱신 및 확인:
 
 ```bash
 sudo fc-cache -fv
-fc-list :lang=ko | head -5  # 한글 폰트 인식 확인
+fc-list | grep -E "Gulim|Batang|Dotum|Malgun"  # 인식 확인
 ```
 
 ```bash

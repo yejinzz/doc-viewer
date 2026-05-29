@@ -280,7 +280,8 @@ window.open(
 - [ ] LibreOffice 설치 및 버전 확인 (`soffice --version`)
 - [ ] HWP/HWPX 지원 시 `apt install libreoffice-h2orestart` 설치
 - [ ] 설치 확인: `soffice --headless --convert-to pdf sample.hwp --outdir /tmp && ls /tmp/sample.pdf`
-- [ ] Linux 서버 한글 폰트 설치: `apt-cache search fonts-nanum` 으로 패키지명 확인 후 설치 (Ubuntu 버전마다 다름, 예: `fonts-nanum fonts-nanum-extra` 또는 `fonts-nanum fonts-nanum-coding`)
+- [ ] 오픈소스 한글 폰트 설치: `apt-cache search fonts-nanum` 으로 패키지명 확인 후 설치 (Ubuntu 버전마다 다름)
+- [ ] (권장) Windows 핵심 폰트 추가로 레이아웃 정확도 향상: `gulim.ttc`, `batang.ttc`, `dotum.ttc`, `malgun.ttf` → `/usr/share/fonts/truetype/` 복사 후 `fc-cache -fv`
 - [ ] `--result-dir` 디렉터리 생성 및 쓰기 권한 확인
 - [ ] `java -jar doc-viewer-1.0.0.jar --libreoffice=<경로> --allowed-paths=<업로드경로> --api-allowed-ips=<CMS서버IP>` 기동
 - [ ] 헬스체크 확인: `curl http://<서버>:8090/docviewer/health`

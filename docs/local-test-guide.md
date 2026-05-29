@@ -79,20 +79,34 @@ ls /tmp/sample.pdf  # 파일이 생성되면 정상
 
 macOS는 h2orestart 패키지를 별도로 설치해야 하며, 로컬 테스트 시 HWP 변환이 동작하지 않을 수 있습니다.
 
-#### 한글 폰트 설치 (글자 깨짐 방지)
+#### 한글 폰트 설치 (글자 깨짐 / 레이아웃 틀어짐 방지)
 
-HWP 변환 후 PDF에서 한글이 깨지면 한글 폰트가 없는 것입니다.
+HWP 변환 후 PDF에서 한글이 깨지거나 페이지 수가 달라지면 폰트 문제입니다.
+
+**기본: 오픈소스 폰트**
 
 ```bash
 # 사용 가능한 패키지 확인 (Ubuntu 버전마다 패키지명이 다름)
 apt-cache search fonts-nanum
 
 # 확인된 패키지로 설치
-sudo apt install fonts-nanum fonts-nanum-extra   # 패키지가 있는 경우
+sudo apt install fonts-nanum fonts-nanum-extra
 sudo fc-cache -fv
-
-# 설치 확인
 fc-list :lang=ko | head -5  # 한글 폰트가 출력되면 정상
+```
+
+**레이아웃 정확도 향상: Windows 핵심 폰트 추가**
+
+굴림/바탕/돋움/맑은 고딕이 없으면 서체 폭 차이로 줄바꿈 위치가 바뀌어 페이지가 늘어날 수 있습니다.
+WSL 환경이라면 Windows 폰트에 직접 접근 가능합니다:
+
+```bash
+sudo cp /mnt/c/Windows/Fonts/gulim.ttc  /usr/share/fonts/truetype/
+sudo cp /mnt/c/Windows/Fonts/batang.ttc /usr/share/fonts/truetype/
+sudo cp /mnt/c/Windows/Fonts/dotum.ttc  /usr/share/fonts/truetype/
+sudo cp /mnt/c/Windows/Fonts/malgun.ttf /usr/share/fonts/truetype/
+sudo fc-cache -fv
+fc-list | grep -E "Gulim|Batang|Dotum|Malgun"  # 인식 확인
 ```
 
 ---
