@@ -58,25 +58,25 @@
   if (cfg.renderType === 'hwp') {
     showLoading('HWP 문서를 불러오는 중...');
     fetch(cfg.fileUrl)
-      .then(function(r) {
+      .then(function (r) {
         if (!r.ok) throw new Error('HTTP ' + r.status);
         return r.arrayBuffer();
       })
-      .then(function(buf) {
+      .then(function (buf) {
         // measureTextWidth 등록 (rhwp 필수 설정 — WASM init 전에 호출)
         if (!globalThis.measureTextWidth) {
           var _ctx = null;
           var _lastFont = '';
-          globalThis.measureTextWidth = function(font, text) {
+          globalThis.measureTextWidth = function (font, text) {
             if (!_ctx) _ctx = document.createElement('canvas').getContext('2d');
             if (font !== _lastFont) { _ctx.font = font; _lastFont = font; }
             return _ctx.measureText(text).width;
           };
         }
-        return import('/docviewer/static/lib/rhwp/rhwp.js').then(function(mod) {
+        return import('/docviewer/static/lib/rhwp/rhwp.js').then(function (mod) {
           return mod.default({ module_or_path: '/docviewer/static/lib/rhwp/rhwp_bg.wasm' })
-            .then(function() { return mod; });
-        }).then(function(mod) {
+            .then(function () { return mod; });
+        }).then(function (mod) {
           var doc = new mod.HwpDocument(new Uint8Array(buf));
           var total = doc.pageCount();
           var current = 0;
@@ -96,17 +96,17 @@
           }
           renderPage(0);
 
-          $('prev-page').addEventListener('click', function() {
+          $('prev-page').addEventListener('click', function () {
             if (current <= 0) return;
             current--; renderPage(current);
           });
-          $('next-page').addEventListener('click', function() {
+          $('next-page').addEventListener('click', function () {
             if (current >= total - 1) return;
             current++; renderPage(current);
           });
         });
       })
-      .catch(function(e) { showError('HWP 문서를 열 수 없습니다: ' + e.message, true); });
+      .catch(function (e) { showError('HWP 문서를 열 수 없습니다: ' + e.message, true); });
     return;
   }
 
