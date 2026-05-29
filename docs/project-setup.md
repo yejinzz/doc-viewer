@@ -353,3 +353,18 @@ sudo apt install fonts-nanum fonts-nanum-coding
 # RHEL/CentOS
 sudo yum install google-noto-cjk-fonts
 ```
+
+#### HWP/HWPX 지원 (Ubuntu/Debian)
+
+HWP/HWPX 파일 변환이 필요하면 추가 패키지를 설치합니다:
+
+```bash
+sudo apt install libreoffice-h2orestart
+```
+
+설치 후 동작 확인:
+
+```bash
+soffice --headless --convert-to pdf sample.hwp --outdir /tmp
+ls /tmp/sample.pdf
+```

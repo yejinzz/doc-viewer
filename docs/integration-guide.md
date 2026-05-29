@@ -278,7 +278,8 @@ window.open(
 ## 운영 환경 배포 체크리스트
 
 - [ ] LibreOffice 설치 및 버전 확인 (`soffice --version`)
-- [ ] HWP 지원 시 LibreOffice 7.0+, HWPX는 7.6+ 확인
+- [ ] HWP/HWPX 지원 시 `apt install libreoffice-h2orestart` 설치
+- [ ] 설치 확인: `soffice --headless --convert-to pdf sample.hwp --outdir /tmp && ls /tmp/sample.pdf`
 - [ ] Linux 서버 한글 폰트 설치 (`fonts-nanum` 등)
 - [ ] `--result-dir` 디렉터리 생성 및 쓰기 권한 확인
 - [ ] `java -jar doc-viewer-1.0.0.jar --libreoffice=<경로> --allowed-paths=<업로드경로> --api-allowed-ips=<CMS서버IP>` 기동

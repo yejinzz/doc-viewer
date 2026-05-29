@@ -56,17 +56,28 @@ sudo apt install libreoffice
 ls /usr/lib/libreoffice/program/soffice
 ```
 
-#### HWP 파일 지원 확인
+#### HWP/HWPX 파일 지원 설정
 
-| 형식 | 최소 LibreOffice 버전 |
-|------|----------------------|
-| .hwp | 7.0 이상 |
-| .hwpx | 7.6 이상 |
+HWP/HWPX 변환은 `libreoffice-h2orestart` 패키지가 필요합니다:
 
 ```bash
-soffice --version
-# 출력 예시: LibreOffice 7.6.x.x
+sudo apt install libreoffice-h2orestart
 ```
+
+설치 후 동작 확인:
+
+```bash
+# 테스트 HWP 파일로 PDF 변환 확인
+soffice --headless --convert-to pdf sample.hwp --outdir /tmp
+ls /tmp/sample.pdf  # 파일이 생성되면 정상
+```
+
+| 형식 | 지원 조건 |
+|------|----------|
+| .hwp | LibreOffice 7.0+ + libreoffice-h2orestart |
+| .hwpx | LibreOffice 7.6+ + libreoffice-h2orestart |
+
+macOS는 h2orestart 패키지를 별도로 설치해야 하며, 로컬 테스트 시 HWP 변환이 동작하지 않을 수 있습니다.
 
 ---
 
@@ -271,7 +282,8 @@ JSP에서 `DocViewer.open()` 버튼 클릭 동작 자체를 확인하고 싶을 
 | `/api/convert` 413 응답 | 파일 크기 초과 | `--max-file-size` 값 늘리기 |
 | `/api/convert` 404 응답 | path 경로 파일 없음 | 파일 경로 확인 |
 | 뷰어 접근 시 404 응답 | 변환 미완료 키 | `/api/status/{key}` 확인 후 `converted` 상태일 때 열기 |
-| HWP 변환 실패 | LibreOffice 버전 낮음 | 7.0 이상으로 업그레이드 |
+| HWP/HWPX 변환 실패 | `libreoffice-h2orestart` 미설치 | `apt install libreoffice-h2orestart` 후 재시도 |
+| HWP 변환 실패 (패키지 설치 후) | LibreOffice 버전 낮음 | 7.0 이상으로 업그레이드 |
 | 변환 후 깨진 PDF | LibreOffice 한글 폰트 없음 | `apt install fonts-nanum` 또는 폰트 설치 |
 | 403 Forbidden (파일 접근) | `--allowed-paths`에 경로 미포함 | 경로를 `--allowed-paths`에 추가 |
 | `Address already in use` | 포트 충돌 | `--port=8091` 등 다른 포트 사용 |
