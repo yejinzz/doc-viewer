@@ -94,7 +94,7 @@ class ViewHandlerTest {
     }
 
     @Test
-    void triggersConversionForHwpAndServesViewerHtml() throws Exception {
+    void hwpKeyReturnsHwpRenderTypeWithFileKey() throws Exception {
         File hwp = File.createTempFile("doc", ".hwp", tempDir.toFile());
         Files.write(hwp.toPath(), "fake hwp".getBytes());
         String key = "FILE_HWP_0";
@@ -103,8 +103,23 @@ class ViewHandlerTest {
 
         HttpResponse<String> resp = get("/docviewer/view?key=" + key);
         assertEquals(200, resp.statusCode());
-        assertTrue(resp.body().contains("\"renderType\":\"pdf\""));
-        assertTrue(resp.body().contains("/docviewer/file?id="));
+        assertTrue(resp.body().contains("\"renderType\":\"hwp\""));
+        assertTrue(resp.body().contains("/docviewer/file?key=" + key));
+        assertFalse(resp.body().contains("/docviewer/file?id="));
+    }
+
+    @Test
+    void hwpxKeyReturnsHwpRenderType() throws Exception {
+        File hwpx = File.createTempFile("doc", ".hwpx", tempDir.toFile());
+        Files.write(hwpx.toPath(), "fake hwpx".getBytes());
+        String key = "FILE_HWPX_0";
+        registry.register(key, hwpx.getAbsolutePath(), "doc.hwpx");
+        registry.markConverted(key, "hash1", hwpx.length(), hwpx.lastModified());
+
+        HttpResponse<String> resp = get("/docviewer/view?key=" + key);
+        assertEquals(200, resp.statusCode());
+        assertTrue(resp.body().contains("\"renderType\":\"hwp\""));
+        assertTrue(resp.body().contains("/docviewer/file?key=" + key));
     }
 
     @Test

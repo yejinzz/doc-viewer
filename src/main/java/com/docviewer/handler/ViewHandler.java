@@ -84,6 +84,9 @@ public class ViewHandler implements HttpHandler {
                 sendError(exchange, 500, key, "문서를 변환할 수 없습니다: " + e.getMessage());
                 return;
             }
+        } else if (renderType == FileTypeDetector.RenderType.HWP) {
+            fileUrl = "/docviewer/file?key=" + key;
+            clientRenderType = "hwp";
         } else {
             fileUrl = "/docviewer/file?key=" + key;
             clientRenderType = renderType.name().toLowerCase();
