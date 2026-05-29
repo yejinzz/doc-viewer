@@ -54,6 +54,52 @@
     return;
   }
 
+  // HWP / HWPX
+  if (cfg.renderType === 'hwp') {
+    showLoading('HWP 문서를 불러오는 중...');
+    fetch(cfg.fileUrl)
+      .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.arrayBuffer();
+      })
+      .then(function(buf) {
+        return import('/docviewer/static/lib/rhwp/rhwp.js').then(function(mod) {
+          return mod.default({ module_or_path: '/docviewer/static/lib/rhwp/rhwp_bg.wasm' })
+            .then(function() { return mod; });
+        }).then(function(mod) {
+          var doc = new mod.HwpDocument(new Uint8Array(buf));
+          var total = doc.pageCount();
+          var current = 0;
+          var container = $('hwp-container');
+
+          $('loading').classList.add('hidden');
+          container.classList.remove('hidden');
+          $('pdf-controls').classList.remove('hidden');
+          $('zoom-in').style.display = 'none';
+          $('zoom-out').style.display = 'none';
+          $('zoom-level').style.display = 'none';
+          $('page-info').textContent = '1 / ' + total;
+
+          function renderPage(idx) {
+            container.innerHTML = doc.renderPageSvg(idx);
+            $('page-info').textContent = (idx + 1) + ' / ' + total;
+          }
+          renderPage(0);
+
+          $('prev-page').addEventListener('click', function() {
+            if (current <= 0) return;
+            current--; renderPage(current);
+          });
+          $('next-page').addEventListener('click', function() {
+            if (current >= total - 1) return;
+            current++; renderPage(current);
+          });
+        });
+      })
+      .catch(function(e) { showError('HWP 문서를 열 수 없습니다: ' + e.message, true); });
+    return;
+  }
+
   // PDF
   var pdfjsLib = window['pdfjs-dist/build/pdf'];
   if (!pdfjsLib) { showError('PDF 뷰어를 초기화할 수 없습니다. 페이지를 새로고침하세요.', false); return; }
