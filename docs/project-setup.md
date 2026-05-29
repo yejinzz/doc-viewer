@@ -346,10 +346,25 @@ sudo systemctl status doc-viewer
 
 ### 폰트 설치 (Linux, 한글 깨짐 방지)
 
-```bash
-# Ubuntu/Debian
-sudo apt install fonts-nanum fonts-nanum-coding
+한글 폰트가 없으면 HWP/HWPX 변환 결과 PDF에서 글자가 깨집니다.
 
+```bash
+# Ubuntu/Debian — 먼저 사용 가능한 패키지 확인 (버전마다 다름)
+apt-cache search fonts-nanum
+
+# 확인된 패키지명으로 설치 (예시)
+sudo apt install fonts-nanum fonts-nanum-extra   # 일부 버전
+sudo apt install fonts-nanum fonts-nanum-coding  # 다른 버전
+```
+
+설치 후 폰트 캐시 갱신:
+
+```bash
+sudo fc-cache -fv
+fc-list :lang=ko | head -5  # 한글 폰트 인식 확인
+```
+
+```bash
 # RHEL/CentOS
 sudo yum install google-noto-cjk-fonts
 ```

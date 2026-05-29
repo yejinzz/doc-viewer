@@ -79,6 +79,22 @@ ls /tmp/sample.pdf  # 파일이 생성되면 정상
 
 macOS는 h2orestart 패키지를 별도로 설치해야 하며, 로컬 테스트 시 HWP 변환이 동작하지 않을 수 있습니다.
 
+#### 한글 폰트 설치 (글자 깨짐 방지)
+
+HWP 변환 후 PDF에서 한글이 깨지면 한글 폰트가 없는 것입니다.
+
+```bash
+# 사용 가능한 패키지 확인 (Ubuntu 버전마다 패키지명이 다름)
+apt-cache search fonts-nanum
+
+# 확인된 패키지로 설치
+sudo apt install fonts-nanum fonts-nanum-extra   # 패키지가 있는 경우
+sudo fc-cache -fv
+
+# 설치 확인
+fc-list :lang=ko | head -5  # 한글 폰트가 출력되면 정상
+```
+
 ---
 
 ## fat-jar 빌드
