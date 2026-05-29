@@ -71,7 +71,8 @@ public class HwpCliConverter implements DocumentConverter {
         );
 
         Process process = new ProcessBuilder(cmd)
-            .redirectErrorStream(true)
+            .redirectOutput(ProcessBuilder.Redirect.DISCARD)
+            .redirectError(ProcessBuilder.Redirect.DISCARD)
             .start();
 
         boolean finished = process.waitFor(timeoutSeconds, TimeUnit.SECONDS);
