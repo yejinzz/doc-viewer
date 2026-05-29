@@ -277,9 +277,8 @@ window.open(
 
 ## 운영 환경 배포 체크리스트
 
-- [ ] LibreOffice 설치 및 버전 확인 (`soffice --version`)
-- [ ] HWP 지원 시 LibreOffice 7.0+, HWPX는 7.6+ 확인
-- [ ] Linux 서버 한글 폰트 설치 (`fonts-nanum` 등)
+- [ ] LibreOffice 설치 및 버전 확인 (`soffice --version`, DOCX/XLSX/PPT 변환용)
+- [ ] Linux 서버 한글 폰트 설치 (`fonts-nanum` 등, LibreOffice 변환 결과 PDF의 한글 깨짐 방지)
 - [ ] `--result-dir` 디렉터리 생성 및 쓰기 권한 확인
 - [ ] `java -jar doc-viewer-1.0.0.jar --libreoffice=<경로> --allowed-paths=<업로드경로> --api-allowed-ips=<CMS서버IP>` 기동
 - [ ] 헬스체크 확인: `curl http://<서버>:8090/docviewer/health`
@@ -322,5 +321,7 @@ ViewHandler가 파일 접근 시 lastModified/size를 빠르게 체크하고 변
 
 **Q. 변환 속도가 느린데 개선할 수 있나요?**
 
-`--lo-pool-size=2` 또는 `--lo-pool-size=3`으로 LibreOffice 인스턴스를 늘리면 동시 처리량이 올라갑니다.
+HWP/HWPX는 서버 변환 없이 브라우저에서 rhwp WASM이 직접 렌더링하므로 `/api/convert` 호출이 즉시 완료됩니다.
+
+DOCX/XLSX/PPT 등 LibreOffice 변환이 느린 경우, `--lo-pool-size=2` 또는 `--lo-pool-size=3`으로 인스턴스를 늘리면 동시 처리량이 올라갑니다.
 단, 인스턴스 1개당 메모리 약 200~400MB 추가 사용합니다.

@@ -4,7 +4,7 @@
 
 브라우저에서 첨부파일 클릭 한 번으로 새 탭에서 문서를 미리보는 독립 실행형 통합 뷰어.
 CMS 서버가 `/docviewer/api/convert`로 파일을 등록·변환하고 키를 발급하면, 브라우저는 해당 키로 뷰어를 엽니다.
-LibreOffice를 서버사이드 변환 엔진으로 사용하고, `java -jar` 한 줄로 기동합니다.
+DOCX/XLSX 등 오피스 문서는 LibreOffice로 서버사이드 변환하고, HWP/HWPX는 rhwp WASM으로 브라우저에서 직접 렌더링합니다. `java -jar` 한 줄로 기동합니다.
 
 ---
 
@@ -19,6 +19,7 @@ LibreOffice를 서버사이드 변환 엔진으로 사용하고, `java -jar` 한
 | 로깅 | SLF4J + Logback | 1.7.36 / 1.2.12 |
 | 빌드 | Maven + maven-shade-plugin | 3.x / 3.4.1 |
 | PDF 렌더링 | Mozilla pdf.js (UMD 빌드) | 4.2.67 |
+| HWP/HWPX 렌더링 | rhwp (Rust/WASM, 브라우저 클라이언트) | 0.7.x |
 | 프론트엔드 | Vanilla JS + HTML + CSS | - |
 
 ---
@@ -28,13 +29,15 @@ LibreOffice를 서버사이드 변환 엔진으로 사용하고, `java -jar` 한
 ```
 CMS 서버
   └─ POST /docviewer/api/convert  ──→  doc-viewer
-       { key, path, originalName }       └─ 파일 등록 + LibreOffice 변환
+       { key, path, originalName }       └─ 파일 등록 + LibreOffice 변환 (DOCX/XLSX/PPT 등)
+                                          └─ HWP/HWPX: 변환 없이 키만 등록 (즉시 완료)
                                           └─ SQLite(docviewer.db)에 key→path 저장
-                                          └─ resultDir/cache/ 에 PDF 캐싱
+                                          └─ resultDir/cache/ 에 PDF 캐싱 (LibreOffice 변환 결과)
 브라우저
   └─ GET /docviewer/view?key=xxx  ──→  doc-viewer
                                           └─ 레지스트리에서 경로 조회
                                           └─ viewer.html + DOCVIEWER_CONFIG JSON 반환
+                                          └─ HWP/HWPX: 원본 파일 스트리밍 → rhwp WASM이 브라우저에서 SVG 렌더링
 ```
 
 ---
@@ -82,7 +85,12 @@ doc-viewer/
     │           ├── doc-viewer-client.js          # 기존 프로젝트 통합용 스니펫
     │           └── lib/
     │               ├── pdf.min.js                # Mozilla pdf.js 4.2.67 UMD 빌드
-    │               └── pdf.worker.min.js
+    │               ├── pdf.worker.min.js
+    │               └── rhwp/                     # rhwp WASM 번들 (HWP/HWPX 클라이언트 렌더링)
+    │                   ├── rhwp.js
+    │                   ├── rhwp_bg.wasm
+    │                   ├── rhwp.d.ts
+    │                   └── rhwp_bg.wasm.d.ts
     └── test/
         └── java/com/docviewer/
             ├── cache/ConversionCacheTest.java
@@ -150,8 +158,8 @@ doc-viewer/
 | PDF | 프론트 | pdf.js 직접 렌더링 |
 | TXT | 프론트 | `<pre>` 태그, EUC-KR/UTF-8 자동 감지 |
 | 이미지 (jpg/jpeg/png/gif/webp/bmp) | 프론트 | `<img>` 태그 |
+| 한글 (.hwp/.hwpx) | 브라우저 → rhwp WASM | SVG 렌더링 (서버 변환 없음, 즉시 표시) |
 | Word (.doc/.docx) | 서버 → LibreOffice | → PDF → pdf.js |
-| 한글 (.hwp/.hwpx) | 서버 → LibreOffice | → PDF → pdf.js |
 | 스프레드시트 (.xls/.xlsx/.ods) | 서버 → LibreOffice | → PDF → pdf.js |
 | 프레젠테이션 (.ppt/.pptx/.odp) | 서버 → LibreOffice | → PDF → pdf.js |
 | 기타 (.rtf/.odt 등) | 서버 → LibreOffice | → PDF → pdf.js |
@@ -168,12 +176,14 @@ CLI 인수가 파일 설정보다 우선합니다.
 | 파라미터 | 기본값 | 필수 | 설명 |
 |----------|--------|------|------|
 | `--port` | `8090` | 아니오 | HTTP 서버 포트 |
-| `--libreoffice` | 없음 | **예** | LibreOffice 설치 경로 |
+| `--libreoffice` | 없음 | **예**¹ | LibreOffice 설치 경로 |
 | `--lo-port` | `2002` | 아니오 | LibreOffice JodConverter 소켓 포트 |
 | `--lo-pool-size` | `1` | 아니오 | LibreOffice 인스턴스 수 |
 | `--cache-ttl` | `86400` | 아니오 | 캐시 TTL (초, 기본 24시간) |
 | `--convert-timeout` | `30` | 아니오 | LibreOffice 변환 타임아웃 (초) |
 | `--result-dir` | `{tmpdir}/docviewer-output` | 아니오 | 변환 결과 및 DB 저장 디렉터리 |
+
+> ¹ HWP/HWPX 파일만 서빙하는 경우에는 `--libreoffice`가 없어도 기동 가능하나, DOCX/XLSX/PPT 등 오피스 문서 변환 시 필수입니다.
 
 ### 보안 설정
 

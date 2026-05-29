@@ -56,17 +56,11 @@ sudo apt install libreoffice
 ls /usr/lib/libreoffice/program/soffice
 ```
 
-#### HWP 파일 지원 확인
+#### HWP/HWPX 지원
 
-| 형식 | 최소 LibreOffice 버전 |
-|------|----------------------|
-| .hwp | 7.0 이상 |
-| .hwpx | 7.6 이상 |
+HWP/HWPX 파일은 **LibreOffice를 사용하지 않습니다.** 브라우저에서 rhwp WASM이 직접 SVG로 렌더링하므로 LibreOffice 버전과 무관하게 동작합니다.
 
-```bash
-soffice --version
-# 출력 예시: LibreOffice 7.6.x.x
-```
+LibreOffice는 DOCX/XLSX/PPT 등 오피스 문서 변환에만 사용됩니다.
 
 ---
 
@@ -148,8 +142,8 @@ curl -s -X POST http://localhost:8090/docviewer/api/convert \
 # 응답: {"status":"ok","key":"TEST_HWP_0"}
 ```
 
-LibreOffice가 필요한 파일(HWP, DOCX, XLSX 등)은 첫 변환에 5~15초 걸립니다.
-curl이 응답을 반환하면 변환 완료입니다. PDF, TXT, 이미지는 즉시 처리됩니다.
+LibreOffice가 필요한 파일(DOCX, XLSX, PPT 등)은 첫 변환에 5~15초 걸립니다.
+curl이 응답을 반환하면 변환 완료입니다. HWP/HWPX, PDF, TXT, 이미지는 즉시 처리됩니다.
 
 다른 파일도 같은 방식으로 등록합니다:
 
@@ -271,8 +265,8 @@ JSP에서 `DocViewer.open()` 버튼 클릭 동작 자체를 확인하고 싶을 
 | `/api/convert` 413 응답 | 파일 크기 초과 | `--max-file-size` 값 늘리기 |
 | `/api/convert` 404 응답 | path 경로 파일 없음 | 파일 경로 확인 |
 | 뷰어 접근 시 404 응답 | 변환 미완료 키 | `/api/status/{key}` 확인 후 `converted` 상태일 때 열기 |
-| HWP 변환 실패 | LibreOffice 버전 낮음 | 7.0 이상으로 업그레이드 |
-| 변환 후 깨진 PDF | LibreOffice 한글 폰트 없음 | `apt install fonts-nanum` 또는 폰트 설치 |
+| HWP/HWPX가 렌더링 안 됨 | rhwp WASM 로드 실패 | 브라우저 콘솔에서 네트워크 오류 확인. `/docviewer/static/lib/rhwp/rhwp_bg.wasm` 경로 접근 가능한지 확인 |
+| 변환 후 깨진 PDF | LibreOffice 한글 폰트 없음 | `apt install fonts-nanum` 또는 폰트 설치 (DOCX/XLSX에만 해당) |
 | 403 Forbidden (파일 접근) | `--allowed-paths`에 경로 미포함 | 경로를 `--allowed-paths`에 추가 |
 | `Address already in use` | 포트 충돌 | `--port=8091` 등 다른 포트 사용 |
 | 페이지 로딩만 되고 안 열림 | LibreOffice 데몬 초기화 대기 | `/api/status`로 변환 완료 확인 후 재시도 |
