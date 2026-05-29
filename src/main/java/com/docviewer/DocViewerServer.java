@@ -2,6 +2,9 @@ package com.docviewer;
 
 import com.docviewer.cache.ConversionCache;
 import com.docviewer.config.DocViewerConfig;
+import com.docviewer.converter.DocumentConverter;
+import com.docviewer.converter.DispatchingConverter;
+import com.docviewer.converter.HwpCliConverter;
 import com.docviewer.converter.LibreOfficeConverter;
 import com.docviewer.detector.FileTypeDetector;
 import com.docviewer.handler.*;
@@ -33,7 +36,9 @@ public class DocViewerServer {
 
         FileKeyRegistry registry = new FileKeyRegistry(resultDir.resolve("docviewer.db"));
         FileTypeDetector detector = new FileTypeDetector(config.allowedExtensions);
-        LibreOfficeConverter converter = new LibreOfficeConverter(config);
+        DocumentConverter libreOffice = new LibreOfficeConverter(config);
+        DocumentConverter hwp = new HwpCliConverter(config);
+        DocumentConverter converter = new DispatchingConverter(libreOffice, hwp);
         LicenseChecker license = new LicenseChecker(config.licenseAllowedIps, config.licenseAllowedDomains);
         IpWhitelistFilter apiFilter = new IpWhitelistFilter(config.apiAllowedIps);
 
