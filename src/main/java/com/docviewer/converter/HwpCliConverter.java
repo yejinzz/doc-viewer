@@ -30,8 +30,9 @@ public class HwpCliConverter implements DocumentConverter {
 
     @Override
     public void convert(File source, File dest) throws Exception {
-        if (!semaphore.tryAcquire(timeoutSeconds, TimeUnit.SECONDS)) {
-            throw new Exception("Conversion queue timeout after " + timeoutSeconds + "s");
+        long queueTimeoutSeconds = timeoutSeconds * 2L;
+        if (!semaphore.tryAcquire(queueTimeoutSeconds, TimeUnit.SECONDS)) {
+            throw new Exception("Conversion queue timeout after " + queueTimeoutSeconds + "s");
         }
         try {
             Path tmpDir = Files.createTempDirectory("hwp-out-");

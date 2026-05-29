@@ -31,8 +31,11 @@ public class DispatchingConverter implements DocumentConverter {
 
     @Override
     public void shutdown() {
-        libreOfficeConverter.shutdown();
-        hwpConverter.shutdown();
+        try {
+            libreOfficeConverter.shutdown();
+        } finally {
+            hwpConverter.shutdown();
+        }
     }
 
     private String ext(String filename) {
