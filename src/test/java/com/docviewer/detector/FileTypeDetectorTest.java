@@ -29,12 +29,10 @@ class FileTypeDetectorTest {
 
     @Test
     void detectsLibreOfficeFormats() {
-        assertEquals(LIBREOFFICE, detector.detect("문서.hwp"));
         assertEquals(LIBREOFFICE, detector.detect("doc.docx"));
         assertEquals(LIBREOFFICE, detector.detect("sheet.xlsx"));
         assertEquals(LIBREOFFICE, detector.detect("pres.pptx"));
         assertEquals(LIBREOFFICE, detector.detect("old.doc"));
-        assertEquals(LIBREOFFICE, detector.detect("data.hwpx"));
     }
 
     @Test
@@ -66,6 +64,14 @@ class FileTypeDetectorTest {
     }
 
     @Test
+    void detectsHwpFormats() {
+        assertEquals(HWP, detector.detect("문서.hwp"));
+        assertEquals(HWP, detector.detect("data.hwpx"));
+        assertEquals(HWP, detector.detect("DOC.HWP"));
+        assertEquals(HWP, detector.detect("DOC.HWPX"));
+    }
+
+    @Test
     void customAllowedExtensionsRestrictsIsSupported() {
         FileTypeDetector restricted = new FileTypeDetector(java.util.Set.of("pdf", "hwp"));
         assertTrue(restricted.isSupported("report.pdf"));
@@ -79,6 +85,6 @@ class FileTypeDetectorTest {
         FileTypeDetector restricted = new FileTypeDetector(java.util.Set.of("pdf", "hwp", "jpg"));
         assertEquals(FileTypeDetector.RenderType.PDF, restricted.detect("doc.pdf"));
         assertEquals(FileTypeDetector.RenderType.IMAGE, restricted.detect("photo.jpg"));
-        assertEquals(FileTypeDetector.RenderType.LIBREOFFICE, restricted.detect("file.hwp"));
+        assertEquals(FileTypeDetector.RenderType.HWP, restricted.detect("file.hwp"));
     }
 }

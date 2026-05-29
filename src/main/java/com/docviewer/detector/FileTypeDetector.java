@@ -5,13 +5,14 @@ import java.util.Set;
 
 public class FileTypeDetector {
 
-    public enum RenderType { PDF, TEXT, IMAGE, LIBREOFFICE }
+    public enum RenderType { PDF, TEXT, IMAGE, LIBREOFFICE, HWP }
 
     private static final Set<String> IMAGE_EXTS = Set.of(
         "jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "ico"
     );
     private static final Set<String> TEXT_EXTS = Set.of("txt", "log", "csv");
-    private static final Set<String> PDF_EXTS = Set.of("pdf");
+    private static final Set<String> PDF_EXTS  = Set.of("pdf");
+    private static final Set<String> HWP_EXTS  = Set.of("hwp", "hwpx");
     private static final Map<String, String> MIME_MAP = Map.ofEntries(
         Map.entry("pdf",  "application/pdf"),
         Map.entry("txt",  "text/plain"),
@@ -40,6 +41,7 @@ public class FileTypeDetector {
         if (PDF_EXTS.contains(ext))   return RenderType.PDF;
         if (TEXT_EXTS.contains(ext))  return RenderType.TEXT;
         if (IMAGE_EXTS.contains(ext)) return RenderType.IMAGE;
+        if (HWP_EXTS.contains(ext))   return RenderType.HWP;
         return RenderType.LIBREOFFICE;
     }
 
@@ -51,11 +53,12 @@ public class FileTypeDetector {
         String ext = ext(filename);
         if (allowedExtensions != null) return allowedExtensions.contains(ext);
         return PDF_EXTS.contains(ext) || TEXT_EXTS.contains(ext)
-            || IMAGE_EXTS.contains(ext) || isLibreOfficeExt(ext);
+            || IMAGE_EXTS.contains(ext) || HWP_EXTS.contains(ext)
+            || isLibreOfficeExt(ext);
     }
 
     private boolean isLibreOfficeExt(String ext) {
-        return Set.of("doc","docx","hwp","hwpx","xls","xlsx","ods",
+        return Set.of("doc","docx","xls","xlsx","ods",
                       "ppt","pptx","odp","odt","rtf").contains(ext);
     }
 
